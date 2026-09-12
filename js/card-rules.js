@@ -117,9 +117,9 @@ function tickStatusesAtTurnStart(who, entity) {
    「バッジなし」の同じ種別から抽選し直す（type自体は変えない）。
    ============================================================ */
 const TYPE_DRAW_RATES = [
-  { type: 'weapon', rate: 0.35 },
-  { type: 'armor',  rate: 0.45 },
-  { type: 'item',   rate: 0.07 }, // trade もここに含める
+  { type: 'weapon', rate: 0.42 },
+  { type: 'armor',  rate: 0.30 },
+  { type: 'item',   rate: 0.15 }, // trade もここに含める
   { type: 'magic',  rate: 0.07 },
   { type: 'miracle', rate: 0.06 },
 ];
