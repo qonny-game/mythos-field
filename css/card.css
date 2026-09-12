@@ -1,0 +1,579 @@
+/* ============================================================
+   card.css — カード1枚の見た目担当ファイル
+
+   ここには「カードそのものの見た目」が全部まとまっている。
+   基本の枠・色分け（種別ごと・呪い/祝福/伝説）、絵柄の表示、
+   数値バッジ、属性バッジ、NEWタグ、伝説カードのキラキラ演出など。
+
+   「カードのデザインを変えたい」という時はまずここを開く。
+   カードがどの画面でどう並ぶか（デッキ一覧・防御選択など）は
+   screens.css 側を見ること。
+   ============================================================ */
+
+
+  .card {
+    background: linear-gradient(155deg, #201a2a, #16121e);
+    border: 2px solid rgba(var(--gold-rgb),0.4);
+    border-radius: 8px;
+    padding: 6px 6px;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    position: relative;
+    z-index: 1;
+    overflow: visible;
+    aspect-ratio: 5 / 7;
+    max-width: 200px; /* 画面が広くてもカード自体がこれ以上大きくならないようにする（高さの暴走を防ぐ） */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .card:hover:not(.disabled) {
+    transform: translateY(-3px);
+    border-color: var(--gold-bright);
+    box-shadow: 0 6px 18px rgba(var(--gold-rgb),0.15);
+    z-index: 10; /* 通常時(z-index:1)より確実に高くして、隣・下の行のカードより前面に来るようにする */
+  }
+  .card.disabled { opacity: 0.35; cursor: not-allowed; }
+  /* 伝説カードは disabled 状態でも虹色の枠がちゃんと見えるよう、薄暗くしすぎない */
+  .card.disabled.is-legend,
+  .card.disabled.is-legend-card {
+    opacity: 0.6;
+  }
+  .card.selected {
+    border-color: var(--gold-bright);
+    background: linear-gradient(155deg, #2e2540, #201a2a);
+    box-shadow: 0 0 0 2px rgba(var(--gold-bright-rgb),0.5), 0 6px 18px rgba(var(--gold-rgb),0.2);
+    transform: translateY(-3px);
+    z-index: 5; /* 選択中も常に前面に。ただしホバー中(10)よりは低くしておく */
+  }
+  /* 手札整理モード：選ばれていないカードは薄く沈め、選んだカードだけ本来の色でくっきり浮かせる */
+  .card.discard-dim {
+    opacity: 0.4;
+    filter: grayscale(0.6);
+    transition: opacity 0.2s ease, filter 0.2s ease, transform 0.15s ease, border-color 0.15s ease;
+  }
+  .card.discard-dim:hover {
+    opacity: 0.7;
+    filter: grayscale(0.25);
+  }
+  /* 手札整理で捨てられたカードが、1枚ずつ順番にシュッと消えていく演出 */
+  .card.is-discarding {
+    animation: cardDiscardOut 0.3s ease-in forwards;
+    pointer-events: none;
+  }
+  @keyframes cardDiscardOut {
+    0%   { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); }
+    100% { opacity: 0; transform: scale(0.85) translateY(40px) rotate(-4deg); }
+  }
+
+  .selected-tag {
+    position: absolute;
+    top: -1px; right: -1px;
+    background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+    color: #16121e;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 0 6px 0 6px;
+    z-index: 5;
+  }
+  .card-type-bar { display: none; }
+  .card.type-weapon { border: 2px solid rgba(200,70,60,0.55); }
+
+  .card-myth {
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+  .card-name {
+    font-family: 'Shippori Mincho', serif; font-weight: 700;
+    font-size: 14px;
+    color: var(--text-main);
+    line-height: 1.3;
+    margin: 4px 0;
+  }
+  .attr-火 { background: rgba(184,73,47,1); color: #fff; }
+  .attr-水 { background: rgba(63,127,166,1); color: #fff; }
+  .attr-木 { background: rgba(76,122,79,1); color: #fff; }
+  .attr-土 { background: rgba(138,106,61,1); color: #fff; }
+  .attr-光 { background: rgba(233,223,192,1); color: #fff; }
+  .attr-闇 { background: rgba(107,63,160,1); color: #fff; }
+  .attr-無 { background: rgba(124,124,138,1); color: #fff; }
+
+  /* カード左上の属性バッジ（仮実装：位置・見た目は後で調整予定） */
+  .attr-badge {
+    position: absolute;
+    left: 2px;
+    top: 2px;
+    z-index: 2;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 5px 9px;
+    border-radius: 18px;
+    line-height: 1.4;
+  }
+
+  /* カード右上：このカードが使うと状態異常を与える効果を持っている場合の目印。●背景に絵文字を乗せる。
+     色は STATUS_COLOR_CLASS（毒＝緑系、暗闇＝紺、閃光＝黄白、呪い＝紫、混乱＝ピンク）と揃えてある。 */
+  .status-badge {
+    position: absolute;
+    right: 2px;
+    top: 2px;
+    z-index: 2;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .status-badge.status-poison { background: #3a7a3d; }
+  .status-badge.status-blind { background: #333f6e; }
+  .status-badge.status-flash { background: #a89658; }
+  .status-badge.status-curse { background: #6b3fa0; }
+  .status-badge.status-confusion { background: #a05a7e; }
+
+  .card-power { font-weight: 700; color: var(--gold-bright); font-size: 20px; font-family: 'Shippori Mincho', serif; }
+
+  .card-face {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0;
+    padding: 6px 4px 4px;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+  }
+  /* カード底辺のカード名。枠線と同じ色の帯を敷いて、文字を抜き文字（濃い色）で見せる。
+     入りきらない長さは省略記号（…）で表示する */
+  /* カード上部のカード名。枠線と同じ色の帯を敷いて、文字を抜き文字（濃い色）で見せる。
+     入りきらない長さは省略記号（…）で表示する */
+  .card-name-footer {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    color: #0a1f26;
+    background: rgba(111,196,224,0.85);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 3px 4px;
+    margin: -6px -6px 0;
+    border-radius: 6px 6px 0 0; /* .card の overflow を visible にしたので、角はここで自前に丸めておく */
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+  }
+  /* HP回復カードは緑、MP回復カードは青のタイトル帯にする */
+  .card.is-heal-hp-card .card-name-footer {
+    color: #0f2414;
+    background: rgba(111,214,138,0.85);
+  }
+  .card.is-heal-mp-card .card-name-footer {
+    color: #ffffff;
+    background: rgba(63,111,160,0.9);
+  }
+  .cf-headrow {
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+  /* デッキ一覧（手札・防御選択・攻撃準備・手札整理）や、バトル演出で場に出るカードは、
+     絵柄と右下の数値だけのシンプルな見た目にする。種別・カード名・効果文などの文字情報は、
+     上段の詳細パネルで確認する設計なので、常に非表示にする。 */
+  /* デッキ一覧・バトル演出・授かり演出・サイドパネルのカードは、絵柄と右下の数値だけの
+     シンプルな見た目にする。種別・カード名・効果文などの文字情報は、
+     上段の詳細パネルで確認する設計なので、常に非表示にする。
+     対象は JS 側で .card-simplified クラスを付与している4箇所
+     （renderHand / showAttackFlash等 / playDiscardResultOverlay / showCardDetail）。 */
+  .card-simplified .cf-headrow,
+  .card-simplified .card-name-footer,
+  .card-simplified .cf-divider,
+  .card-simplified .cf-effect {
+    display: none;
+  }
+  /* 絵柄をメインビジュアルとしてしっかり明るく見せる */
+  .card-simplified .card-art {
+    opacity: 1;
+    filter: brightness(1.15) saturate(1.1);
+  }
+  .card-simplified .card-art::after {
+    background: linear-gradient(155deg, rgba(20,16,26,0.15), rgba(14,11,18,0.1));
+  }
+  .cf-kind {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--text-main);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .cf-attr {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 6px;
+    line-height: 1.4;
+  }
+  .cf-num {
+    font-family: 'Shippori Mincho', serif; font-weight: 700;
+    font-weight: 700;
+    font-size: 46px;
+    line-height: 1;
+    color: var(--gold-bright);
+    text-shadow: 0 0 16px rgba(var(--gold-bright-rgb),0.35);
+    margin-top: 2px;
+  }
+  /* 数値の種類ごとの紋章バッジ。カード右下に少しはみ出す形で敷き、その手前に数値を重ねる。
+     画像が用意されていない種類（--stat-icon-* が none）は、今まで通り背景なしの見た目のまま。
+     この絶対配置は親の .card-face（padding: 6px 4px 4px）基準になるため、.card 自体の外側に
+     はみ出させるには .card-face の padding 分も上乗せした値にしてある。 */
+  .cf-num.stat-icon-attack,
+  .cf-num.stat-icon-defense,
+  .cf-num.stat-icon-heal-hp,
+  .cf-num.stat-icon-heal-mp,
+  .cf-num.stat-icon-guard,
+  .cf-num.stat-icon-money {
+    position: absolute;
+    right: -28px;
+    bottom: -16px;
+    z-index: 2;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    margin-top: 0;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.6));
+    text-shadow: 0 0 4px #000, 0 0 4px #000, 0 1px 2px #000;
+  }
+  .cf-num.stat-icon-attack { background-image: var(--stat-icon-attack); }
+  .cf-num.stat-icon-defense { background-image: var(--stat-icon-defense); }
+  .cf-num.stat-icon-heal-hp { background-image: var(--stat-icon-heal-hp); }
+  .cf-num.stat-icon-heal-mp { background-image: var(--stat-icon-heal-mp); }
+  .cf-num.stat-icon-guard { background-image: var(--stat-icon-guard); }
+  .cf-num.stat-icon-money { background-image: var(--stat-icon-money); }
+  /* instantカードの目印バッジ。左下に小さく表示する（仮実装：位置・見た目は後で調整予定） */
+  .instant-badge {
+    position: absolute;
+    left: 2px;
+    bottom: 2px;
+    z-index: 2;
+    font-size: 16px;
+    line-height: 1;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.8));
+  }
+  .cf-num-text {
+    font-size: 17px;
+    margin-top: 4px;
+  }
+  /* 上段中央の詳細パネルだけは、デッキカードより大きく表示する（固定高さの枠に収める） */
+  .card-detail-content .cf-num {
+    font-size: 70px;
+  }
+  /* 詳細パネルでは右下バッジ演出はせず、今まで通り中央のテキスト表示のままにする */
+  .card-detail-content .cf-num.stat-icon-attack,
+  .card-detail-content .cf-num.stat-icon-defense,
+  .card-detail-content .cf-num.stat-icon-heal-hp,
+  .card-detail-content .cf-num.stat-icon-heal-mp,
+  .card-detail-content .cf-num.stat-icon-guard,
+  .card-detail-content .cf-num.stat-icon-money {
+    position: static;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    background-image: none;
+  }
+  .card-detail-content .cf-num-text {
+    font-size: 24px;
+  }
+  .cf-divider {
+    width: 60%;
+    height: 1px;
+    background: rgba(var(--gold-rgb),0.25);
+    margin: 5px 0 4px;
+  }
+  .cf-effect {
+    font-size: 9.5px;
+    color: #c9a8e8;
+    line-height: 1.25;
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  .bc-watermark {
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Shippori Mincho', serif; font-weight: 700;
+    font-weight: 900;
+    font-size: 92px;
+    line-height: 1;
+    opacity: 0.09;
+    pointer-events: none;
+    z-index: 0;
+    user-select: none;
+  }
+
+  /* カードに設定された絵（cards.js の art フィールド）を、うっすら背景として敷く演出 */
+  .card-art {
+    position: absolute;
+    inset: 0;
+    border-radius: 6px; /* .card の overflow を visible にしたので、角はここで自前に丸めておく */
+    background-size: cover;
+    background-position: center;
+    opacity: 0.8;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .card-art::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(155deg, rgba(20,16,26,0.8), rgba(14,11,18,0.35));
+  }
+  /* 伝説カードは絵柄の上に虹色の光沢をごく控えめに流す（メインはカード外周のオーラの方） */
+  .card.is-legend .card-art::before,
+  .card.is-legend-card .card-art::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(120deg, rgba(255,90,90,0.22), rgba(255,217,61,0.18), rgba(90,197,255,0.22), rgba(181,90,255,0.22));
+    background-size: 300% 300%;
+    mix-blend-mode: overlay;
+    opacity: 0.4;
+    animation: legendArtShimmer 1.8s ease infinite;
+  }
+  @keyframes legendArtShimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .card.is-bless-card {
+    background: linear-gradient(155deg, #4a3f1a, #2a2210);
+    border-color: rgba(var(--gold-bright-rgb),0.6);
+  }
+  .card.is-bless-card .bc-watermark { color: #ffe9a8; }
+
+  .card.is-curse-card {
+    background: linear-gradient(155deg, #2e1840, #180c22);
+    border-color: rgba(168,63,232,0.6);
+  }
+  .card.is-curse-card .bc-watermark { color: #d8a8f8; }
+
+  .card.is-legend-card {
+    border-width: 3px;
+    background: linear-gradient(135deg, #3a2a1a, #2a1830, #1a2a3a, #2a1a30);
+    background-size: 300% 300%;
+    border-color: transparent;
+  }
+  .card.is-legend-card .bc-watermark {
+    color: #fff2c4;
+    opacity: 0.1;
+  }
+  .card.is-bless-card .card-face,
+  .card.is-curse-card .card-face,
+  .card.is-legend-card .card-face { position: relative; z-index: 1; }
+  @keyframes legendShimmerBg {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  /* HP回復＝緑、MP回復＝水色、両方＝縦グラデーション、攻撃PLUS＝赤、護りPLUS＝濃い青 */
+  .card.is-heal-hp-card {
+    background: linear-gradient(155deg, #1e3a24, #12220f);
+    border-color: rgba(111,214,138,0.5);
+  }
+  .card.is-heal-mp-card {
+    background: linear-gradient(155deg, #163a42, #0e2228);
+    border-color: rgba(111,196,224,0.5);
+  }
+  .card.is-heal-dual-card {
+    background: linear-gradient(180deg, #1e3a24 0%, #163a42 100%);
+    border-color: rgba(140,210,190,0.5);
+  }
+  .card.is-plus-atk-card {
+    background: linear-gradient(155deg, #3a1e1e, #220f0f);
+    border-color: rgba(224,110,100,0.55);
+  }
+  .card.is-plus-def-card {
+    background: linear-gradient(155deg, #16204a, #0d132c);
+    border-color: rgba(90,120,224,0.55);
+  }
+
+  /* 数字の色分け */
+  .cf-num-heal-hp { color: #7fe89a; text-shadow: 0 0 14px rgba(127,232,154,0.45); }
+  .cf-num-heal-mp { color: #7fc4e0; text-shadow: 0 0 14px rgba(127,196,224,0.45); }
+  .cf-num-plus-atk { color: #e85d5d; text-shadow: 0 0 14px rgba(232,93,93,0.5); }
+  .cf-num-plus-def { color: #5a78e0; text-shadow: 0 0 14px rgba(90,120,224,0.55); }
+
+  .cf-num-dual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    margin-top: 2px;
+  }
+  .cf-num-row {
+    font-family: 'Shippori Mincho', serif; font-weight: 700;
+    font-size: 12px;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .cf-num-row b { font-size: 20px; font-weight: 700; }
+  .cf-num-row-hp { color: #9fe8b0; }
+  .cf-num-row-hp b { color: #7fe89a; text-shadow: 0 0 12px rgba(127,232,154,0.4); }
+  .cf-num-row-mp { color: #9fd8ec; }
+  .cf-num-row-mp b { color: #7fc4e0; text-shadow: 0 0 12px rgba(127,196,224,0.4); }
+
+  .heal-badges {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin: 2px 0 4px;
+  }
+  .heal-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+  .heal-badge.hp { background: rgba(127,232,154,0.18); color: #7fe89a; }
+  .heal-badge.mp { background: rgba(63,111,160,0.22); color: #7fb8e0; }
+  .heal-badge.shield { background: rgba(var(--gold-rgb),0.2); color: var(--gold-bright); }
+  .heal-badge.cure { background: rgba(201,168,232,0.2); color: #c9a8e8; }
+  .heal-badge.cost { background: rgba(var(--gold-rgb),0.22); color: var(--gold-coin); }
+  .heal-badge.rare {
+    background: linear-gradient(160deg, #fff2c4, #e8c874);
+    color: #4a3510;
+    font-weight: 700;
+  }
+  .heal-badge.plus { background: rgba(200,70,60,0.22); color: #e08a6f; }
+
+  /* 上段中央の詳細パネル内では、HP/MP/護るの表示もカードの数字と同じくらい大きくする。
+     ここだけは丸・四角の背景を消して、数字（文字）だけを見せる（レアバッジの金色背景は特別装飾として残す）。 */
+  .card-detail-content .heal-badge {
+    font-size: 48px;
+    padding: 0;
+    display: inline-block;
+    line-height: 1.2;
+    background: none;
+  }
+  .card-detail-content .heal-badge.rare {
+    padding: 4px 14px;
+    background: linear-gradient(160deg, #fff2c4, #e8c874);
+  }
+
+  .new-tag {
+    position: absolute;
+    top: -1px; right: -1px;
+    background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+    color: #16121e;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 2px 7px;
+    border-radius: 0 6px 0 6px;
+    z-index: 5;
+  }
+  /* 授かったばかりのカードは、デッキにパッと現れるのではなく、ふわっとフェードインしながら加わる。
+     is-new-appear は「授かった直後の描画」だけに付く専用クラスなので、
+     その後 NEW アイコン（is-new）だけが残っている間の再描画では、このアニメーションは再生されない。 */
+  .card.is-new-appear {
+    animation: newCardFadeIn 0.4s ease-out;
+  }
+  @keyframes newCardFadeIn {
+    0%   { opacity: 0; transform: translateY(14px) scale(0.9); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* instant（ターン消費なし）カードの目印。ブーツ＝身軽にすぐ動ける、のイメージ。
+     幸/呪/伝と同じく背景全面に大きく透かし表示する */
+  .card.is-legend {
+    border: 3px solid transparent;
+    background:
+      linear-gradient(155deg, #201a2a, #16121e) padding-box,
+      linear-gradient(135deg, #ff6b6b, #ffd93d, #6bcfff, #b56bff) border-box;
+    background-size: 100% 100%, 300% 300%;
+  }
+  @keyframes legendCardGlow {
+    0%, 100% { background-position: 0% 0%, 0% 50%; }
+    50% { background-position: 0% 0%, 100% 50%; }
+  }
+  /* 伝説カードの周りに漂う虹色オーラ。is-legend / is-legend-card 共通で、
+     カードの外側ににじみ出る複数色の光を重ねて、色が巡るように動かす。
+     枠自体のグラデーション（legendCardGlow / legendShimmerBg）と、オーラ（legendAura）を
+     同時にアニメーションさせるため、animation プロパティをカンマ区切りで2本立てにしている。 */
+  .card.is-legend {
+    animation: legendCardGlow 1.5s ease infinite, legendAura 3s ease-in-out infinite;
+  }
+  .card.is-legend-card {
+    animation: legendShimmerBg 4s ease infinite, legendAura 3s ease-in-out infinite;
+  }
+  @keyframes legendAura {
+    0%   { box-shadow: 0 0 14px 2px rgba(255,110,110,0.5), 0 0 26px 6px rgba(255,110,110,0.2); }
+    25%  { box-shadow: 0 0 14px 2px rgba(255,217,97,0.5), 0 0 26px 6px rgba(255,217,97,0.2); }
+    50%  { box-shadow: 0 0 14px 2px rgba(110,207,255,0.5), 0 0 26px 6px rgba(110,207,255,0.2); }
+    75%  { box-shadow: 0 0 14px 2px rgba(181,110,255,0.5), 0 0 26px 6px rgba(181,110,255,0.2); }
+    100% { box-shadow: 0 0 14px 2px rgba(255,110,110,0.5), 0 0 26px 6px rgba(255,110,110,0.2); }
+  }
+
+  /* 伝説カード専用：常時ふわふわ舞う光の粒子。カード全体に散りばめ、
+     nth-child で1粒ずつ位置・タイミングをずらして自然な散らばりを出す。 */
+  .legend-sparkle-layer {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: 6px;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .legend-sparkle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #fff6c9;
+    box-shadow: 0 0 6px 2px rgba(255,236,150,0.9);
+    opacity: 0;
+    animation: legendSparkleFloat 1.6s ease-in-out infinite;
+  }
+  .legend-sparkle:nth-child(1) { left: 12%; top: 78%; background: #ff9e9e; box-shadow: 0 0 6px 2px rgba(255,158,158,0.9); animation-delay: 0s; }
+  .legend-sparkle:nth-child(2) { left: 82%; top: 18%; background: #ffe89e; box-shadow: 0 0 6px 2px rgba(255,232,158,0.9); animation-delay: 0.2s; }
+  .legend-sparkle:nth-child(3) { left: 30%; top: 10%; background: #9ee6ff; box-shadow: 0 0 6px 2px rgba(158,230,255,0.9); animation-delay: 0.4s; }
+  .legend-sparkle:nth-child(4) { left: 68%; top: 88%; background: #c9a8ff; box-shadow: 0 0 6px 2px rgba(201,168,255,0.9); animation-delay: 0.6s; }
+  .legend-sparkle:nth-child(5) { left: 8%; top: 42%; background: #ffe89e; box-shadow: 0 0 6px 2px rgba(255,232,158,0.9); animation-delay: 0.8s; }
+  .legend-sparkle:nth-child(6) { left: 90%; top: 60%; background: #ff9e9e; box-shadow: 0 0 6px 2px rgba(255,158,158,0.9); animation-delay: 1.0s; }
+  .legend-sparkle:nth-child(7) { left: 48%; top: 92%; background: #9ee6ff; box-shadow: 0 0 6px 2px rgba(158,230,255,0.9); animation-delay: 1.2s; }
+  .legend-sparkle:nth-child(8) { left: 55%; top: 6%; background: #c9a8ff; box-shadow: 0 0 6px 2px rgba(201,168,255,0.9); animation-delay: 1.4s; }
+  @keyframes legendSparkleFloat {
+    0%   { opacity: 0; transform: translateY(0) scale(0.6); }
+    15%  { opacity: 1; transform: translateY(-4px) scale(1); }
+    70%  { opacity: 0.8; transform: translateY(-14px) scale(0.9); }
+    100% { opacity: 0; transform: translateY(-22px) scale(0.5); }
+  }
+

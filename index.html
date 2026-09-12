@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1400">
+<title>神器録 - MYTHOS FIELD</title>
+
+<!--
+  このファイルは「骨組み」だけです。
+  見た目 → style.css
+  カードの中身 → cards.js
+  ゲームの動き → game.js
+  を、それぞれ別ファイルで編集してください。
+-->
+<!-- CSSは4ファイルに分割してある。base.cssに:root変数の定義があるので、必ず一番先に読み込むこと -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/card.css">
+<link rel="stylesheet" href="css/screens.css">
+<link rel="stylesheet" href="css/misc.css">
+</head>
+<body>
+
+<div class="game-stage" id="gameStage">
+<div class="side-detail-panel" id="sideDetailPanel">
+  <div class="side-detail-placeholder" id="sideDetailPlaceholder">カードにカーソルを合わせると<br>ここに詳細が表示されます</div>
+  <div class="side-detail-content" id="sideDetailContent" style="display:none;">
+    <div class="side-detail-art-wrap">
+      <div class="card side-detail-card" id="sideDetailCard"></div>
+    </div>
+    <div class="side-detail-name" id="sdName"></div>
+    <div class="side-detail-row"><span class="side-detail-label">タイプ</span><span id="sdType"></span></div>
+    <div class="side-detail-row"><span class="side-detail-label">神話</span><span id="sdMyth"></span></div>
+    <div class="side-detail-row"><span class="side-detail-label">属性</span><span id="sdAttr"></span></div>
+    <div class="side-detail-row" id="sdNumRow"><span class="side-detail-label" id="sdNumLabel">数値</span><span id="sdNumValue"></span></div>
+    <div class="side-detail-effect" id="sdEffect"></div>
+  </div>
+</div>
+<div class="wrap">
+  <div class="board">
+    <div class="player-panel player-panel-slim" id="playerPanel">
+      <div class="player-head">
+        <span class="player-name" id="playerName">貴方</span>
+      </div>
+      <div class="stats">
+        <div class="stat hp-stat hp-stat-big">
+          <span class="stat-label-text">HP</span>
+          <span class="stat-value" id="playerHpText">-</span>
+        </div>
+        <div class="stat-subrow">
+          <div class="stat guard-stat">
+            <span class="stat-label-text">加護</span>
+            <span class="stat-value" id="playerGuardText">0</span>
+          </div>
+          <div class="stat mp-stat">
+            <span class="stat-label-text">MP</span>
+            <span class="stat-value" id="playerMpText">-</span>
+          </div>
+          <div class="stat money-stat">
+            <span class="stat-label-text">所持金</span>
+            <span class="stat-value" id="playerMoneyText">-</span>
+          </div>
+        </div>
+      </div>
+      <div class="status-tags" id="playerStatus"></div>
+    </div>
+
+    <div class="action-showcase top-action-showcase" id="topPlayerTotalBox">
+      <div class="action-showcase-total" id="topPlayerActionTotal"></div>
+    </div>
+
+    <!--
+      cardDetailPanel は元々「カード詳細のホバー表示」を担当していたが、
+      その役目は左サイドの sideDetailPanel（#sideDetailPanel）に移行済み。
+      cdMyth / cdName / cdKind / cdNum / cdEffect は現在 showCardDetail から更新されず、常に空欄のまま。
+      cardDetailStatEffect（数値・テキストのみの演出）だけは今も現役でここを使っている。
+      中身は削除せず残してあるので、将来また別用途に使う場合はここに実装すればよい。
+    -->
+    <div class="card-detail-panel" id="cardDetailPanel" style="display:flex;">
+      <div class="card-detail-placeholder" id="cardDetailPlaceholder"></div>
+      <div class="card-detail-content" id="cardDetailContent" style="display:none;">
+        <div class="cd-row-title">
+          <div class="cd-myth-text" id="cdMyth"></div>
+          <div class="cd-name-text" id="cdName"></div>
+        </div>
+        <div class="cd-row-kind" id="cdKind"></div>
+        <div class="cd-row-num" id="cdNum"></div>
+        <div class="cd-row-effect"><div class="cd-effect" id="cdEffect"></div></div>
+      </div>
+      <div class="card-detail-stateffect" id="cardDetailStatEffect" style="display:none;"></div>
+    </div>
+
+    <div class="action-showcase top-action-showcase" id="topEnemyTotalBox">
+      <div class="action-showcase-total" id="topEnemyActionTotal"></div>
+    </div>
+
+    <div class="player-panel player-panel-slim enemy" id="enemyPanel">
+      <div class="player-head">
+        <span class="player-name">敵</span>
+      </div>
+      <div class="stats">
+        <div class="stat hp-stat hp-stat-big">
+          <span class="stat-label-text">HP</span>
+          <span class="stat-value" id="enemyHpText">-</span>
+        </div>
+        <div class="stat-subrow">
+          <div class="stat guard-stat">
+            <span class="stat-label-text">加護</span>
+            <span class="stat-value" id="enemyGuardText">0</span>
+          </div>
+          <div class="stat mp-stat">
+            <span class="stat-label-text">MP</span>
+            <span class="stat-value" id="enemyMpText">-</span>
+          </div>
+          <div class="stat money-stat">
+            <span class="stat-label-text">所持金</span>
+            <span class="stat-value" id="enemyMoneyText">-</span>
+          </div>
+        </div>
+      </div>
+      <div class="status-tags" id="enemyStatus"></div>
+    </div>
+
+    <div class="hand-section">
+      <div id="handModeNormal">
+        <div class="hand-grid" id="handGrid"></div>
+        <button class="action-btn summon-btn" id="summonBtn">召喚 — 攻撃神器を1枚引く（ターン終了）</button>
+      </div>
+
+      <div id="handModeBattle" style="display:none;">
+        <div class="showcase-row-4col">
+          <div class="action-showcase" id="playerFlashLayer">
+            <div class="action-showcase-cards" id="playerActionCards"></div>
+            <div class="action-showcase-total" id="playerActionTotal" style="display:none;"></div>
+          </div>
+          <div class="action-showcase" id="enemyFlashLayer">
+            <div class="action-showcase-cards" id="enemyActionCards"></div>
+            <div class="action-showcase-total" id="enemyActionTotal" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="handModeDefense" style="display:none;">
+        <div class="hand-grid" id="defenseGrid"></div>
+        <button class="action-btn take-damage" id="takeDamageBtn">防御せず受ける</button>
+      </div>
+
+      <div id="handModeAttackPrep" style="display:none;">
+        <div class="hand-grid" id="attackPrepGrid"></div>
+        <div class="prep-btn-row">
+          <button class="action-btn cancel-mode" id="cancelAttackBtn">キャンセル</button>
+          <button class="action-btn confirm-mode" id="startAttackBtn">攻撃開始</button>
+        </div>
+      </div>
+
+      <div id="handModeDiscard" style="display:none;">
+        <div class="hand-grid" id="discardGrid"></div>
+        <div class="prep-btn-row">
+          <button class="action-btn confirm-mode" id="confirmDiscardBtn">選んだカードを捨てて次へ</button>
+        </div>
+      </div>
+
+      <div class="discard-result-overlay" id="discardResultOverlay">
+        <div class="discard-result-label" id="discardResultLabel"></div>
+        <div class="discard-result-cards" id="discardResultCards"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="version-tag">Mythos-Field 1.2.2 by QONNY</div>
+
+<div class="overlay" id="overlay">
+  <div class="overlay-content">
+    <div class="overlay-title" id="overlayTitle">決着</div>
+    <div class="overlay-cause" id="overlayCause"></div>
+    <button class="action-btn" id="overlayRestart">もう一度戦う</button>
+  </div>
+</div>
+
+
+<!--
+  以下、読み込み順は依存関係の順番なので変えないこと。
+  1. cards.js         : カードデータ本体（CARDS配列）
+  2. card-rules.js     : カードのルール・出現率など（CARDSに依存）
+  3. anim-config.js    : 演出タイミング設定（依存なし）
+  4. stat-effects.js   : 数値・バトル演出（ANIMに依存）
+  5. card-view.js      : カードの見た目・詳細表示
+  6. battle.js         : 攻撃・防御フェイズ
+  7. discard.js        : 手札整理・授かり演出
+  8. game-core.js      : ゲーム本体・起動処理（他の全部に依存、最後に読み込む）
+-->
+<script src="js/cards.js"></script>
+<script src="js/card-rules.js"></script>
+<script src="js/anim-config.js"></script>
+<script src="js/stat-effects.js"></script>
+<script src="js/card-view.js"></script>
+<script src="js/battle.js"></script>
+<script src="js/discard.js"></script>
+<script src="js/game-core.js"></script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+/* ============================================================
+   misc.css — 汎用パーツ担当ファイル
+
+   ここには「共通ボタンの基本デザイン」「勝敗画面（overlay）」
+   「画面右下のバージョン表記」など、特定の画面に紐づかない
+   細々したスタイルがまとまっている。
+   ============================================================ */
+
+
+  button.action-btn {
+    font-family: 'Shippori Mincho', serif; font-weight: 700;
+    background: linear-gradient(160deg, #2a2436, #1a1622);
+    border: 1px solid var(--gold);
+    color: var(--gold-bright);
+    padding: 18px 26px;
+    border-radius: 4px;
+    font-size: 20px;
+    width: 970px;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  button.action-btn:hover { background: linear-gradient(160deg, var(--gold), #a37f34); color: #16121e; }
+  button.action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  button.action-btn.secondary { border-color: var(--void-attr); color: var(--text-dim); }
+  button.action-btn.secondary:hover { background: linear-gradient(160deg, #3a3648, #22202c); color: var(--text-main); }
+
+  .version-tag {
+    position: fixed;
+    right: 8px;
+    bottom: 6px;
+    font-size: 11px;
+    color: var(--text-dim);
+    opacity: 0.5;
+    letter-spacing: 0.03em;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(5,3,8,0.88);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 50;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  .overlay.show { opacity: 1; pointer-events: all; }
+  .overlay-content {
+    text-align: center;
+  }
+  .overlay-title {
+    font-family: 'Shippori Mincho', serif; font-weight: 700;
+    font-size: 222px;
+    letter-spacing: 0.0em;
+    margin-bottom: 20px;
+  }
+  .overlay-title.win { color: var(--gold-bright); text-shadow: 0 0 40px rgba(var(--gold-rgb),0.4); }
+  .overlay-title.lose { color: #8a4040; }
+  .overlay-cause {
+    font-size: 24px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    margin: -8px 0 24px;
+  }
+
+  /* 手札整理：新しく引いたカードを画面中央に大きく見せる演出（下からふわっとフェードイン） */

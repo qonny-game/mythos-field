@@ -1,0 +1,662 @@
+/* ============================================================
+   base.css — 土台・骨格担当ファイル
+
+   ここには「ゲーム全体で使う色・フォントなどの変数（:root）」
+   「画面全体の大きさ・拡大縮小のしくみ（.game-stage/.wrap/.board）」
+   「左サイドの詳細パネル」「上段のプレイヤーステータス表示」
+   「上段中央の旧詳細パネル（今は空欄運用）」がまとまっている。
+
+   配色や全体レイアウトの土台を変えたい時はここを開く。
+   カード自体の見た目は card.css、各画面の中身は screens.css へ。
+   ============================================================ */
+
+
+  @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@700;800&display=swap');
+
+  :root {
+    --bg-void: #0e0b12;
+    --bg-panel: #17131d;
+    --gold: #c9a24b;
+    --gold-rgb: 201,162,75; /* --gold のRGB成分。透明度違いを rgba(var(--gold-rgb), 0.2) のように使う */
+    --gold-bright: #e8c874;
+    --gold-bright-rgb: 232,200,116; /* --gold-bright のRGB成分 */
+    --ember: #b8492f;
+    --shadow: #6b3fa0;
+    --void-attr: #7c7c8a;
+    --hp-red: #a8384a;
+    --mp-blue: #3f6fa0;
+    --gold-coin: #c9a24b;
+    --text-main: #e9e2d0;
+    --text-dim: #948d7d;
+    /* 上段カード詳細パネルの背景絵。JS側がカードごとに --card-art-url を差し替える */
+    --card-art-url: none;
+    /* カードの数値バッジ（右下に少しはみ出す紋章アイコン）。ファイル名は先に決めてあるので、
+       stat_icons フォルダに同名の画像を置くだけで、そのまま反映される。
+       まだ置かれていない間はブラウザ側で読み込みエラーになるだけで、見た目には影響しない。 */
+    --stat-icon-attack: url("../img_stat_icons/icon_attack.png");
+    --stat-icon-defense: url("../img_stat_icons/icon_defense.png");
+    --stat-icon-heal-hp: url("../img_stat_icons/icon_heal_hp.png");
+    --stat-icon-heal-mp: url("../img_stat_icons/icon_heal_mp.png");
+    --stat-icon-guard: url("../img_stat_icons/icon_guard.png");
+    --stat-icon-money: url("../img_stat_icons/icon_money.png");
+  }
+
+  * { box-sizing: border-box; margin:0; padding:0; }
+
+  /* ===== ここから固定レイアウト＋スケール方式 =====
+     ゲーム画面は 1400x788（16:9）の固定サイズで作り、実際の見た目は
+     JS側（syncGameScale 関数）が transform: scale() で画面いっぱいに拡大縮小する。
+     この方式にしたことで、以下の中身は「ウィンドウ幅が変わったら崩れる」ことを
+     一切気にせず、常にこの基準サイズの中でのピクセル値として組んでよい。 */
+  html, body {
+    width: 100%;
+    height: 100%;
+  }
+  body {
+    background: radial-gradient(ellipse at top, #1c1624 0%, var(--bg-void) 55%);
+    color: var(--text-main);
+    font-family: 'Noto Serif JP', serif;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .game-stage {
+    width: 1680px; /* 1400（既存のボード）+ 280（左サイドの詳細パネル） */
+    height: 788px;
+    flex-shrink: 0;
+    transform-origin: center center;
+    display: flex;
+    flex-direction: row;
+  }
+
+  .wrap {
+    width: 1400px;
+    height: 788px;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding: 12px 16px;
+    flex-shrink: 0;
+  }
+
+  /* ===== カード詳細サイドパネル（画面左端に純増設） ===== */
+  .side-detail-panel {
+    width: 280px;
+    height: 788px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    padding: 16px 14px;
+    background: linear-gradient(160deg, var(--bg-panel), #12101a);
+    border-right: 1px solid rgba(var(--gold-rgb),0.25);
+    overflow-y: auto;
+  }
+  .side-detail-placeholder {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 13px;
+    line-height: 1.8;
+  }
+  .side-detail-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .side-detail-art-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 4px;
+  }
+  /* サイドパネル内のカード絵柄は、デッキ上のカードよりずっと大きく見せる */
+  .card.side-detail-card {
+    width: 230px;
+    max-width: 230px;
+  }
+  .side-detail-name {
+    font-family: 'Shippori Mincho', serif; font-weight: 700;
+    font-size: 20px;
+    color: var(--gold-bright);
+    text-align: center;
+    line-height: 1.3;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(var(--gold-rgb),0.2);
+  }
+  .side-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 14px;
+    color: var(--text-main);
+  }
+  .side-detail-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+  .side-detail-effect {
+    margin-top: 6px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(var(--gold-rgb),0.2);
+    font-size: 13px;
+    line-height: 1.7;
+    color: #c9a8e8;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .board {
+    display: grid;
+    grid-template-columns: 0.7fr 0.45fr 0.7fr 0.45fr 0.7fr;
+    grid-template-rows: 1fr 480px; /* 固定サイズなので、上段は残り全部、デッキは20枚+ボタンがきっちり収まる480pxで決め打ちでよい */
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .card-detail-panel {
+    grid-column: 1/-1;
+    background: linear-gradient(160deg, #1c1725, #120f18);
+    border: 1px solid rgba(var(--gold-rgb),0.2);
+    border-radius: 4px;
+    padding: 12px 16px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+  }
+  /* カードの絵（art）が設定されているとき、詳細パネルの背景にうっすら敷く演出。
+     デッキ上のカード（.card-art）と全く同じ濃さになるよう、画像レイヤー（::before）に
+     opacity をかけ、その上に暗めのグラデーション（::after）を重ねる2層構成にする。
+     絵が無い通常時（has-artクラスが付いていない）は今まで通りの見た目のまま。 */
+  .card-detail-panel.has-art::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: var(--card-art-url);
+    background-size: cover;
+    background-position: center;
+    opacity: 0.8;
+    z-index: 0;
+  }
+  .card-detail-panel.has-art::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(155deg, rgba(20,16,26,0.8), rgba(14,11,18,0.35));
+    z-index: 0;
+  }
+  .card-detail-placeholder,
+  .card-detail-content,
+  .card-detail-stateffect {
+    position: relative;
+    z-index: 1;
+  }
+  .card-detail-placeholder {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  /* 敵味方それぞれの「攻撃・防御合計値」を常時表示する枠 */
+  .top-action-showcase.action-showcase {
+    grid-column: 1/-1;
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+  }
+
+  .card-detail-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 中央パネルを一時的に借りて出す数値演出（消費・ダメージ・回復・呪い）。
+     攻撃力予告・防御力（行動数値枠側でpersistentに残るもの）はここには出ない。 */
+  .card-detail-stateffect {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    animation: actionTotalIn 0.3s ease-out;
+  }
+  .card-detail-stateffect .cd-stateffect-who {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+  }
+  .card-detail-stateffect .action-total-value {
+    font-size: clamp(36px, 10vw, 52px); /* パネルの高さ(190px)に確実に収まるよう、行動数値枠よりさらに控えめにする */
+    line-height: 1; /* 通常のline-height(0.85)だと上下の余白計算がズレて見切れることがあるため、明示的に1に固定 */
+  }
+
+  /* 行1：神話・カード名 固定高さ */
+  .cd-row-title {
+    height: 36px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+  .cd-row-title .cd-myth-text {
+    font-size: 15px;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    line-height: 1;
+  }
+  .cd-row-title .cd-name-text {
+    font-family: 'Shippori Mincho', serif; font-weight: 700;
+    font-size: 24px;
+    color: var(--gold-bright);
+    line-height: 1.2;
+    max-width: 100%;
+    /* overflow: hidden; */
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* 行2：種別＋属性を1行に 固定高さ */
+  .cd-row-kind {
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: 0.1em;
+  }
+  .cd-row-kind .cf-attr { font-size: 11px; }
+  /* 行3：数値 固定高さ（カード面と同じくらい大きく表示） */
+  .cd-row-num {
+    height: 84px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .cd-row-num .card-power {
+    font-size: 36px;
+  }
+  /* 行4：効果テキスト 固定高さ（2〜3行分を確保） */
+  .cd-row-effect {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cd-effect {
+    font-size: 20px;
+    color: #c9a8e8;
+    line-height: 1.4;
+    max-width: 100%;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  .card-detail-panel { grid-column: auto; order: 3; }
+  .top-action-showcase#topPlayerTotalBox { grid-column: auto; order: 2; }
+  .top-action-showcase#topEnemyTotalBox { grid-column: auto; order: 4; }
+  .player-panel:not(.enemy) { order: 1; }
+  .player-panel.enemy { order: 5; }
+  .hand-section { order: 6; grid-column: 1/-1; }
+
+  .showcase-row-4col { flex-wrap: nowrap; }
+
+  .player-panel {
+    background: linear-gradient(160deg, var(--bg-panel), #12101a);
+    border: 1px solid rgba(var(--gold-rgb),0.25);
+    border-radius: 4px;
+    padding: 10px 12px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+  }
+  .player-panel.enemy { border-color: rgba(139,63,63,0.35); }
+
+  /* ステータス枠を少し狭く（合計値枠を追加した分の調整） */
+  .player-panel.player-panel-slim {
+    padding: 10px 50px;
+  }
+
+  /* 攻撃側/防御側パネルの縁色 */
+  .player-panel.is-attacking-side { border-color: rgba(224,93,93,0.6); }
+  .player-panel.is-defending-side { border-color: rgba(127,184,224,0.6); }
+
+  /* 今、手番（ターン）を持っている側のステータス枠を明るく光らせる。
+     自分のターンなら player-panel（金系）、敵のターンなら player-panel.enemy（赤系）が光る。 */
+  .player-panel.is-active-turn {
+    border-color: var(--gold-bright);
+    box-shadow: 0 0 0 1px rgba(var(--gold-bright-rgb),0.35), 0 0 22px rgba(var(--gold-bright-rgb),0.35);
+    animation: activeTurnGlow 2s ease-in-out infinite;
+  }
+  .player-panel.enemy.is-active-turn {
+    border-color: #e85d5d;
+    box-shadow: 0 0 0 1px rgba(232,93,93,0.35), 0 0 22px rgba(232,93,93,0.35);
+    animation: activeTurnGlowEnemy 2s ease-in-out infinite;
+  }
+  @keyframes activeTurnGlow {
+    0%, 100% { box-shadow: 0 0 0 1px rgba(var(--gold-bright-rgb),0.35), 0 0 16px rgba(var(--gold-bright-rgb),0.3); }
+    50% { box-shadow: 0 0 0 1px rgba(var(--gold-bright-rgb),0.6), 0 0 28px rgba(var(--gold-bright-rgb),0.55); }
+  }
+  @keyframes activeTurnGlowEnemy {
+    0%, 100% { box-shadow: 0 0 0 1px rgba(232,93,93,0.35), 0 0 16px rgba(232,93,93,0.3); }
+    50% { box-shadow: 0 0 0 1px rgba(232,93,93,0.6), 0 0 28px rgba(232,93,93,0.55); }
+  }
+  /* バトル演出中（攻撃側/防御側の色が付いている間）は、そちらの色を優先し、
+     ターン発光は一時的に隠す（瞬間的な状態表示の方が視認性として重要なため） */
+  .player-panel.is-active-turn.is-attacking-side,
+  .player-panel.is-active-turn.is-defending-side {
+    animation: none;
+  }
+  .player-panel.is-attacking-side { border-color: rgba(224,93,93,0.6); box-shadow: none; }
+  .player-panel.is-defending-side { border-color: rgba(127,184,224,0.6); box-shadow: none; }
+
+  /* 手番の矢印表示（実要素として追加する） */
+  .action-side-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 28px;
+    font-weight: 900;
+    z-index: 3;
+    animation: actionIndicatorPulse 0.9s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .action-side-arrow.arrow-attack {
+    right: -14px;
+    color: #e85d5d;
+    text-shadow: 0 0 10px rgba(232,93,93,0.7);
+  }
+  .action-side-arrow.arrow-defend {
+    left: -14px;
+    color: #7fb8e0;
+    text-shadow: 0 0 10px rgba(127,184,224,0.7);
+  }
+  @keyframes actionIndicatorPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  .player-panel.hit-effect { animation: hitShake 0.5s ease; }
+  .player-panel.hit-effect::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 4px;
+    background: rgba(255,60,60,0.28);
+    animation: hitFlashBg 0.5s ease;
+    pointer-events: none;
+    z-index: 15;
+  }
+  @keyframes hitShake {
+    0%, 100% { transform: translateX(0); }
+    15% { transform: translateX(-8px); }
+    30% { transform: translateX(7px); }
+    45% { transform: translateX(-5px); }
+    60% { transform: translateX(4px); }
+    75% { transform: translateX(-2px); }
+  }
+  @keyframes hitFlashBg {
+    0% { opacity: 0; }
+    20% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  .player-panel.heal-effect::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 4px;
+    background: rgba(127,232,154,0.22);
+    animation: hitFlashBg 0.5s ease;
+    pointer-events: none;
+    z-index: 15;
+  }
+
+  /* バトル演出中のカード（攻撃・防御・回復）は、デッキ一覧の .card と全く同じ見た目・サイズで表示する。
+     ここでは登場・退場などの「演出（アニメーション）」だけを追加で付与する。
+     演出エリアは flex レイアウトなので、デッキのグリッドセルに相当する幅をここで明示しておく。 */
+  .battle-flash-card {
+    width: 130px;
+    flex: 0 0 130px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  }
+  /* 攻撃カード：相手側へシュッと滑り込みながら現れ、その場に留まる（フェードアウトはモーダルが閉じる時） */
+  .battle-flash-card.is-attack-slide {
+    border-color: #d9605a;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 24px rgba(217,96,90,0.4);
+    animation: slideAttackIn 0.5s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+  }
+  .battle-flash-card.is-attack-slide.slide-right { --slide-from: -140px; }
+  .battle-flash-card.is-attack-slide.slide-left { --slide-from: 140px; }
+  @keyframes slideAttackIn {
+    0%   { opacity: 0; transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) translateX(var(--slide-from)) scale(0.75) rotate(-6deg); }
+    60%  { opacity: 1; transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) translateX(calc(var(--slide-from) * -0.08)) scale(1.05) rotate(1deg); }
+    100% { opacity: 1; transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) translateX(0) scale(1) rotate(0deg); }
+  }
+  /* 防御カード：どっしり構えるように登場する */
+  .battle-flash-card.is-defense-set {
+    animation: defenseSetIn 0.45s ease-out forwards;
+  }
+  @keyframes defenseSetIn {
+    0%   { opacity: 0; transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) scale(0.7) translateY(10px); }
+    60%  { opacity: 1; transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) scale(1.08) translateY(0); }
+    100% { opacity: 1; transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) scale(1) translateY(0); }
+  }
+  /* 演出モーダルが閉じる瞬間、まだ残っているカードをふわっと消す */
+  .battle-flash-card.is-leaving {
+    animation: flashCardOut 0.35s ease-in forwards;
+  }
+  @keyframes flashCardOut {
+    0%   { opacity: 1; transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) scale(1); }
+    100% { opacity: 0; transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) scale(0.9) translateY(-10px); }
+  }
+  /* 完全ブロック：攻撃カードが「カキーン」と弾かれて戻る */
+  .battle-flash-card.is-bounced {
+    animation: attackBounceBack 0.5s cubic-bezier(0.3, 0, 0.3, 1.4) forwards;
+  }
+  .battle-flash-card.is-bounced.slide-right { --bounce-to: -90px; }
+  .battle-flash-card.is-bounced.slide-left { --bounce-to: 90px; }
+  @keyframes attackBounceBack {
+    0%   { transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) translateX(0) scale(1) rotate(0deg); filter: brightness(1); }
+    15%  { transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) translateX(calc(var(--bounce-to) * -0.09)) scale(0.96) rotate(3deg); filter: brightness(2.2); }
+    45%  { transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) translateX(calc(var(--bounce-to) * 0.44)) scale(0.85) rotate(-8deg); filter: brightness(1.4); }
+    100% { transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) translateX(var(--bounce-to)) scale(0.7) rotate(-14deg); opacity: 0.3; filter: brightness(1); }
+  }
+  /* 命中：攻撃カードが「シュッ」と一撃を放つような軽いパルス */
+  .battle-flash-card.is-hit-pulse {
+    animation: attackHitPulse 0.4s ease-out;
+  }
+  @keyframes attackHitPulse {
+    0%   { transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) scale(1); filter: brightness(1); }
+    30%  { transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) scale(1.12); filter: brightness(2); }
+    100% { transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) scale(1); filter: brightness(1); }
+  }
+  /* 回復カード：ふわっと現れる */
+  .battle-flash-card.is-heal-set {
+    border-color: #6fd68a;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 24px rgba(111,214,138,0.45);
+    animation: healSetIn 0.5s ease-out forwards;
+  }
+  @keyframes healSetIn {
+    0%   { opacity: 0; transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) scale(0.7) translateY(14px); }
+    100% { opacity: 1; transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) scale(1) translateY(0); }
+  }
+  /* 回復カード：拡大しながらふわっと消える（回復エフェクトと同時） */
+  .battle-flash-card.is-heal-burst {
+    animation: healBurstOut 0.5s ease-out forwards;
+  }
+  @keyframes healBurstOut {
+    0%   { opacity: 1; transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) scale(1); }
+    100% { opacity: 0; transform: translate(calc(var(--stack-i, 0) * 28px), calc(var(--stack-i, 0) * 22px)) scale(1.6); }
+  }
+  /* 回復・加護時のきらきらエフェクト（色はkindごとに変わる） */
+  .heal-sparkle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #b8f5c8;
+    border-radius: 50%;
+    box-shadow: 0 0 8px 2px rgba(127,232,154,0.8);
+    pointer-events: none;
+    z-index: 20;
+    animation: healSparkleFloat 1.1s ease-out forwards;
+  }
+  .heal-sparkle.sparkle-guard {
+    background: #d9b8f5;
+    box-shadow: 0 0 8px 2px rgba(181,123,234,0.8);
+  }
+  @keyframes healSparkleFloat {
+    0%   { opacity: 0; transform: translateY(0) scale(0.5); }
+    20%  { opacity: 1; transform: translateY(-6px) scale(1); }
+    100% { opacity: 0; transform: translateY(-28px) scale(0.3); }
+  }
+  .player-panel::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.6;
+  }
+  .player-panel.enemy::before { background: linear-gradient(90deg, transparent, var(--ember), transparent); }
+
+  .player-panel.attack-effect { animation: attackPulse 0.5s ease; }
+  .player-panel.attack-effect::before {
+    animation: attackGlowBar 0.5s ease;
+  }
+  @keyframes attackPulse {
+    0%, 100% { transform: scale(1); box-shadow: none; }
+    30% { transform: scale(1.03); box-shadow: 0 0 0 2px rgba(var(--gold-bright-rgb),0.6), 0 0 26px rgba(var(--gold-bright-rgb),0.5); }
+  }
+  @keyframes attackGlowBar {
+    0%, 100% { opacity: 0.6; filter: brightness(1); }
+    40% { opacity: 1; filter: brightness(2.2); }
+  }
+
+  .player-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+  .player-name {
+    font-family: 'Shippori Mincho', serif; font-weight: 700;
+    font-size: 34px;
+    letter-spacing: 0.08em;
+    color: var(--gold-bright);
+  }
+  .player-panel.enemy .player-name { color: #d98a6f; }
+
+  .stats { display: flex; flex-direction: column; gap: 3px; }
+  .stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-bottom: 2px;
+    position: relative;
+  }
+  .stat-label-text {
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+  }
+  .stat-value {
+    font-family: 'Shippori Mincho', serif; font-weight: 700;
+    font-size: clamp(22px, 7vw, 30px);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-main);
+  }
+  .stat.hp-stat .stat-value { color: var(--hp-red); text-shadow: 0 0 16px rgba(168,56,74,0.35); }
+  .stat.hp-stat-big { padding-bottom: 22px; }
+  .stat.hp-stat-big .stat-label-text { font-size: 30px; }
+  .stat.hp-stat-big .stat-value { font-size: clamp(52px, 17vw, 76px); text-shadow: 0 0 24px rgba(168,56,74,0.45); line-height: 0.85; }
+
+  /* 自分（プレイヤー）のHPは回復と同じ緑色にする */
+  #playerPanel .stat.hp-stat .stat-value {
+    color: #7fe89a;
+    text-shadow: 0 0 16px rgba(127,232,154,0.4);
+  }
+
+  .stat-subrow {
+    display: flex;
+    gap: 14px;
+    margin-top: 10px;
+  }
+  .stat-subrow .stat {
+    flex: 1;
+    border-bottom: none;
+    padding-bottom: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+  .stat-subrow .stat-value { font-size: clamp(20px, 6vw, 40px); }
+  .stat.mp-stat .stat-value { color: var(--mp-blue); text-shadow: 0 0 16px rgba(63,111,160,0.35); }
+  .stat.money-stat .stat-value { color: var(--gold-coin); text-shadow: 0 0 16px rgba(var(--gold-rgb),0.35); }
+  .stat.money-stat .stat-value .unit { font-size: 12px; margin-left: 3px; color: var(--text-dim); }
+  .stat.guard-stat .stat-value { color: #b57bea; text-shadow: 0 0 16px rgba(181,123,234,0.35); }
+
+  .status-tags {
+    display: flex; gap: 6px; margin-top: 3px; flex-wrap: wrap;
+  }
+  .status-tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(139,63,160,0.2);
+    border: 1px solid rgba(139,63,160,0.4);
+    color: #c9a8e8;
+  }
+  /* 状態異常ごとの色分け（毒＝緑系、暗闇＝紺、閃光＝黄白、呪い＝紫、混乱＝ピンク） */
+  .status-tag.status-poison {
+    background: rgba(87,168,90,0.2);
+    border-color: rgba(87,168,90,0.45);
+    color: #9fe0a2;
+  }
+  .status-tag.status-blind {
+    background: rgba(51,63,110,0.35);
+    border-color: rgba(90,107,181,0.5);
+    color: #a8b4e8;
+  }
+  .status-tag.status-flash {
+    background: rgba(232,224,168,0.2);
+    border-color: rgba(232,224,168,0.5);
+    color: #f0ead0;
+  }
+  .status-tag.status-curse {
+    background: rgba(139,63,160,0.25);
+    border-color: rgba(139,63,160,0.5);
+    color: #d8a8e8;
+  }
+  .status-tag.status-confusion {
+    background: rgba(224,110,158,0.2);
+    border-color: rgba(224,110,158,0.5);
+    color: #f0a8c8;
+  }
+
