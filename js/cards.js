@@ -142,7 +142,7 @@ const CARDS = [
   {name:"ヘファイストスの青銅鎧", myth:"ギリシャ", type:"armor", attr:"土", power:14, art:"img_card/22hefa.jpg"},
   {name:"ラクシュミーの蓮の盾", myth:"インド", type:"armor", attr:"水", power:15, art:"img_card/24raku.jpg"},
 
-  {name:"織姫バリア", myth:"", type:"armor", attr:"光", power:35, badge:"legend", rare:true, art:"img_card/41orihime_barrier.jpg"},
+  {name:"織姫バリア", myth:"", type:"armor", attr:"光", power:350, badge:"legend", rare:true, art:"img_card/41orihime_barrier.jpg"},
   {name:"フルパワー盾勇者", myth:"", type:"armor", attr:"無", power:20, badge:"legend", rare:true, art:"img_card/52fullpower_shieldhero.jpg"},
 
 
